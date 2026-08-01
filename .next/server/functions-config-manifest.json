@@ -1,1 +1,1 @@
-{"version":1,"functions":{}}
+{"version":1,"functions":{"/api/admin/categories":{},"/api/admin/categories/[id]":{},"/api/admin/branches":{},"/api/admin/branches/[id]":{},"/api/admin/orders":{},"/api/admin/orders/[id]":{},"/api/admin/menu-items/[id]":{},"/api/admin/pos/orders":{},"/api/admin/upload":{},"/api/admin/pos/summary":{},"/api/admin/menu-items":{},"/api/orders/[orderNumber]":{},"/admin/branches":{},"/admin/menu":{},"/admin/orders/[id]":{},"/admin/orders":{},"/admin/pos":{},"/checkout":{},"/menu":{},"/order/[orderNumber]":{},"/admin/pos/summary":{}}}
