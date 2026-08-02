@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Marquee from "@/components/Marquee";
 import BranchSelectButton from "@/components/BranchSelectButton";
+import Hero3DSando from "@/components/Hero3DSando";
 
 // Server Component fetching real database records
 export default async function Home() {
@@ -13,7 +14,14 @@ export default async function Home() {
     orderBy: { name: "asc" },
   });
 
-  // 2. Fetch top 4 fan favourite items (where isSignature or isNew is true)
+  // 2. Fetch The Sando item details
+  const sandoItem = await prisma.menuItem.findFirst({
+    where: {
+      name: { contains: "Sando", mode: "insensitive" },
+    },
+  });
+
+  // 3. Fetch top 4 fan favourite items (where isSignature or isNew is true)
   const fanFavourites = await prisma.menuItem.findMany({
     where: {
       isActive: true,
@@ -33,42 +41,8 @@ export default async function Home() {
 
       {/* Main Content */}
       <main className="flex-1">
-        {/* 1. HERO SECTION */}
-        <section className="relative overflow-hidden pt-12 pb-20 px-4 sm:px-8 border-b border-cream/10 text-center">
-          {/* Background Decorative Glow */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-orange/15 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="max-w-4xl mx-auto space-y-6 relative z-10">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-ink/50 border border-orange/40 text-orange font-mono text-xs uppercase tracking-widest">
-              <span>🔥 Lahore&apos;s Hot Chicken &amp; Slider Destination</span>
-            </div>
-
-            <h1 className="font-anton text-5xl sm:text-7xl md:text-8xl tracking-tight text-cream uppercase leading-[0.95] drop-shadow-lg">
-              Not just a sandwich. <br />
-              <span className="text-orange">It&apos;s a vibe.</span>
-            </h1>
-
-            <p className="font-work text-base sm:text-xl text-cream/85 max-w-2xl mx-auto leading-relaxed">
-              Hand-breaded hot chicken tenders, house-made buns, customizable heat levels, hand-spun shakes, and signature SS treats crafted fresh daily across Lahore.
-            </p>
-
-            <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link
-                href="/menu"
-                className="w-full sm:w-auto px-8 py-4 bg-orange hover:bg-orange/90 text-ink font-anton text-lg uppercase tracking-wider rounded-xl transition-transform active:scale-95 shadow-xl flex items-center justify-center gap-2"
-              >
-                <span>See the menu</span>
-                <span className="font-sans">→</span>
-              </Link>
-              <Link
-                href="#branches"
-                className="w-full sm:w-auto px-8 py-4 bg-ink/70 hover:bg-ink text-cream border border-cream/20 hover:border-orange font-anton text-lg uppercase tracking-wider rounded-xl transition-all shadow-md"
-              >
-                Change branch
-              </Link>
-            </div>
-          </div>
-        </section>
+        {/* 1. 3D INTERACTIVE HERO SECTION */}
+        <Hero3DSando sandoMenuItem={sandoItem} />
 
         {/* 2. SCROLLING MARQUEE TICKER */}
         <Marquee />

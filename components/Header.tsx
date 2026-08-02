@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { getCookie, setCookie, BRANCH_NAME_COOKIE_NAME, BRANCH_COOKIE_NAME, LAST_ORDER_COOKIE_NAME } from "@/lib/cookies";
+import { getCookie, setCookie, deleteCookie, BRANCH_NAME_COOKIE_NAME, BRANCH_COOKIE_NAME, LAST_ORDER_COOKIE_NAME } from "@/lib/cookies";
 import { useCartStore } from "@/lib/cartStore";
 import BranchModal, { Branch } from "./BranchModal";
 import BranchSwitchConfirmModal from "./BranchSwitchConfirmModal";
@@ -31,7 +31,39 @@ export default function Header({ initialBranches }: HeaderProps) {
 
     const orderNum = getCookie(LAST_ORDER_COOKIE_NAME);
     if (orderNum) {
-      setLastOrderNumber(decodeURIComponent(orderNum));
+      const decodedNum = decodeURIComponent(orderNum);
+
+      // Verify order status from API to clear finished/cancelled tracking
+      fetch(`/api/orders/${decodedNum}?t=${Date.now()}`, { cache: "no-store" })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.order) {
+            const { status, updatedAt } = data.order;
+            if (status === "delivered" || status === "cancelled") {
+              const updatedTime = new Date(updatedAt).getTime();
+              const now = Date.now();
+              const diffMinutes = (now - updatedTime) / (1000 * 60);
+
+              // Clear tracking cookie if completed/cancelled > 15 mins ago or from previous day
+              const orderDateStr = new Date(updatedAt).toDateString();
+              const todayStr = new Date().toDateString();
+
+              if (diffMinutes > 15 || orderDateStr !== todayStr) {
+                deleteCookie(LAST_ORDER_COOKIE_NAME);
+                setLastOrderNumber(null);
+                return;
+              }
+            }
+            setLastOrderNumber(decodedNum);
+          } else {
+            // Stale order number not found in DB
+            deleteCookie(LAST_ORDER_COOKIE_NAME);
+            setLastOrderNumber(null);
+          }
+        })
+        .catch(() => {
+          setLastOrderNumber(decodedNum);
+        });
     }
 
     const handleBranchChange = (e: Event) => {
@@ -82,7 +114,7 @@ export default function Header({ initialBranches }: HeaderProps) {
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
           {/* Logo & Brand Name (7 circle removed) */}
           <Link href="/" className="flex items-center gap-2 group shrink-0">
-            <span className="font-anton text-xl sm:text-3xl text-cream tracking-wide uppercase group-hover:text-orange transition-colors whitespace-nowrap">
+            <span className="font-anton text-xl sm:text-3xl text-orange tracking-wide uppercase transition-colors whitespace-nowrap">
               Seven Sides
             </span>
           </Link>

@@ -2,9 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { StatusTimeline } from "./StatusTimeline";
 import PerforatedTicket from "./PerforatedTicket";
-import { setCookie, LAST_ORDER_COOKIE_NAME } from "@/lib/cookies";
+import { setCookie, deleteCookie, LAST_ORDER_COOKIE_NAME } from "@/lib/cookies";
 
 interface OrderItem {
   id: string;
@@ -50,14 +51,24 @@ interface OrderTrackingClientProps {
 export function OrderTrackingClient({ initialOrder }: OrderTrackingClientProps) {
   const [order, setOrder] = useState<OrderData>(initialOrder);
   const [isPolling, setIsPolling] = useState(false);
+  const router = useRouter();
+
+  const isFinalized = order.status === "delivered" || order.status === "cancelled";
+
+  const handleDismissTracking = () => {
+    deleteCookie(LAST_ORDER_COOKIE_NAME);
+    router.push("/menu");
+    router.refresh();
+  };
 
   // Set last_order_number cookie on client mount and poll for status updates
   useEffect(() => {
-    if (order?.orderNumber) {
+    if (order?.orderNumber && !isFinalized) {
       setCookie(LAST_ORDER_COOKIE_NAME, order.orderNumber, 30);
     }
 
     const fetchLatestOrder = async () => {
+      if (isFinalized) return;
       try {
         setIsPolling(true);
         const res = await fetch(`/api/orders/${order.orderNumber}?t=${Date.now()}`, {
@@ -83,11 +94,12 @@ export function OrderTrackingClient({ initialOrder }: OrderTrackingClientProps) 
     // Immediate fetch on mount
     fetchLatestOrder();
 
-    // Poll every 5 seconds
-    const pollInterval = setInterval(fetchLatestOrder, 5000);
-
-    return () => clearInterval(pollInterval);
-  }, [order.orderNumber]);
+    // Poll every 5 seconds only if not finalized
+    if (!isFinalized) {
+      const pollInterval = setInterval(fetchLatestOrder, 5000);
+      return () => clearInterval(pollInterval);
+    }
+  }, [order.orderNumber, isFinalized]);
 
   // Format ETA time
   const getFormattedETA = () => {
@@ -245,13 +257,23 @@ export function OrderTrackingClient({ initialOrder }: OrderTrackingClientProps) 
               )}
             </div>
 
-            <div className="pt-2">
+            <div className="pt-2 flex items-center justify-between gap-4">
               <Link
                 href="/menu"
                 className="inline-block font-mono text-xs text-orange hover:underline font-semibold"
               >
                 ← Back to Menu
               </Link>
+
+              {isFinalized && (
+                <button
+                  type="button"
+                  onClick={handleDismissTracking}
+                  className="px-3.5 py-1.5 bg-cream/10 hover:bg-orange hover:text-ink text-cream font-mono text-xs rounded-xl border border-cream/20 transition-all shadow"
+                >
+                  Clear Active Tracking Badge
+                </button>
+              )}
             </div>
           </div>
         </div>

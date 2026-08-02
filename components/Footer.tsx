@@ -25,7 +25,7 @@ export default function Footer({ branches }: FooterProps) {
         {/* Brand & About */}
         <div className="space-y-4 md:col-span-1">
           <div className="flex items-center gap-2">
-            <span className="font-anton text-2xl text-cream tracking-wide uppercase">
+            <span className="font-anton text-2xl text-orange tracking-wide uppercase">
               Seven Sides
             </span>
           </div>
